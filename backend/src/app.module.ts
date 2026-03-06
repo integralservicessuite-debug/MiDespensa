@@ -13,7 +13,7 @@ import { LocationModule } from './location/location.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: 'c:/Users/integ/Documents/MiDespensa/backend/public',
+      rootPath: join(process.cwd(), 'public'),
       serveRoot: '/api/v1/assets',
     }),
     AuthModule,
