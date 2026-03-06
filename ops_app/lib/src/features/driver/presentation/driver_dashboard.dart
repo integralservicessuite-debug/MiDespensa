@@ -1,6 +1,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/repository_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -168,7 +169,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> with SingleTi
                             if (mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(isDelivery ? '✅ ¡Entrega confirmada! Ganaste \$${_earningsPerDelivery.toStringAsFixed(2)}' : 'Todas las bolsas cargadas. ¡Puedes navegar!')),
+                                SnackBar(content: Text(isDelivery ? '✅ ¡Entrega confirmada! Revisa tus ganancias en la pestaña de historial.' : 'Todas las bolsas cargadas. ¡Puedes navegar!')),
                               );
                               if (isDelivery) _tabController.animateTo(1); // Ir a pestaña Ganancias
                             }

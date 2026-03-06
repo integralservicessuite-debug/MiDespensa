@@ -1596,13 +1596,13 @@ class _OrderItemTileState extends State<_OrderItemTile> {
   }
 }
 
-class _OrdersView extends StatefulWidget {
+class _OrdersView extends ConsumerStatefulWidget {
   const _OrdersView();
   @override
-  State<_OrdersView> createState() => _OrdersViewState();
+  ConsumerState<_OrdersView> createState() => _OrdersViewState();
 }
 
-class _OrdersViewState extends State<_OrdersView> {
+class _OrdersViewState extends ConsumerState<_OrdersView> {
   late IO.Socket socket;
   final Map<String, Map<String, dynamic>> _driverLocations = {};
   final Set<String> _subscribedOrders = {};
@@ -1732,8 +1732,8 @@ class _OrdersViewState extends State<_OrdersView> {
                 onPressed: isSubmitting ? null : () async {
                   setDialogState(() => isSubmitting = true);
                   try {
-                    final apiService = ref.read(apiServiceProvider);
-                    await apiService.patch('/orders/${order['id']}', data: {
+                    final apiService = ApiService();
+                    await apiService.patch('/orders/${order['id']}', {
                       'shopperRating': _shopperRating,
                       'driverRating': _driverRating,
                       'reviewComment': _commentController.text,
@@ -1877,7 +1877,7 @@ class _OrdersViewState extends State<_OrdersView> {
                                           context: context, 
                                           isScrollControlled: true, 
                                           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-                                          builder: (_) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom), child: _ChatWidget(socket: socket, orderId: order['id'], senderRole: 'CUSTOMER'))
+                                          builder: (_) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom), child: _ChatWidgetView(socket: socket, orderId: order['id'].toString(), senderRole: 'CUSTOMER'))
                                         );
                                       },
                                       icon: const Icon(Icons.chat),
@@ -2177,6 +2177,84 @@ class _BrowseView extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Widget de Chat accesible desde cualquier contexto en home_screen.
+class _ChatWidgetView extends StatefulWidget {
+  final dynamic socket;
+  final String orderId;
+  final String senderRole;
+  const _ChatWidgetView({required this.socket, required this.orderId, required this.senderRole});
+
+  @override
+  State<_ChatWidgetView> createState() => _ChatWidgetViewState();
+}
+
+class _ChatWidgetViewState extends State<_ChatWidgetView> {
+  final List<Map<String, dynamic>> _messages = [];
+  final TextEditingController _msgCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.socket.on('chatMessage', (data) {
+      if (mounted && data['orderId'] == widget.orderId) {
+        setState(() => _messages.add({'text': data['message'], 'sender': data['senderRole']}));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    super.dispose();
+  }
+
+  void _sendMsg() {
+    if (_msgCtrl.text.trim().isEmpty) return;
+    widget.socket.emit('sendChatMessage', {'orderId': widget.orderId, 'message': _msgCtrl.text.trim(), 'senderRole': widget.senderRole});
+    setState(() => _messages.add({'text': _msgCtrl.text.trim(), 'sender': 'ME'}));
+    _msgCtrl.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.55,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text('Chat del Pedido', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const Divider(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (_, i) {
+                final m = _messages[i];
+                final isMe = m['sender'] == 'ME';
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isMe ? Colors.green.shade100 : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(m['text'] ?? ''),
+                  ),
+                );
+              },
+            ),
+          ),
+          Row(children: [
+            Expanded(child: TextField(controller: _msgCtrl, decoration: const InputDecoration(hintText: 'Mensaje...'))),
+            IconButton(onPressed: _sendMsg, icon: const Icon(Icons.send, color: Colors.green)),
+          ]),
+        ],
+      ),
     );
   }
 }
