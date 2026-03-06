@@ -1,0 +1,147 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. USUARIOS
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  phone     String?
+  role      String   @default("CUSTOMER")
+  status    String   @default("ACTIVE")
+  address   String?  // Saved default address
+  cardInfo  String?  // Saved masked card info
+  currentLat Float?
+  currentLng Float?
+
+  // Relations
+  ordersAsCustomer Order[] @relation("CustomerOrders")
+  ordersAsShopper  Order[] @relation("ShopperOrders")
+  ordersAsDriver   Order[] @relation("DriverOrders")
+  deliveries       Delivery[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 2. CATEGORÍAS
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  image    String?
+  products Product[]
+}
+
+// 3. PRODUCTOS
+model Product {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  price          Decimal
+  image          String?
+  stockQuantity  Int
+  
+  // Ubicación en Tienda
+  aisle          String?  // Isla
+  section        String?  // Sección
+  level          String?  // Nivel
+  
+  barcode        String?  @unique
+  allowSubstitutions Boolean @default(true)
+
+  categoryId     String?
+  category       Category? @relation(fields: [categoryId], references: [id])
+
+  orderItems     OrderItem[]
+  replacements   OrderItem[] @relation("ReplacementProduct")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 3. ÓRDENES
+model Order {
+  id                 String      @id @default(uuid())
+  customerId         String
+  shopperId          String?
+  driverId           String?
+  batchId            String?     // Para agrupar órdenes en un mismo viaje
+  status             String      @default("CREATED") // Was Enum OrderStatus
+  deliveryWindowStart DateTime?
+  deliveryWindowEnd   DateTime?
+  
+  // Checkout Details
+  deliveryAddress    String?
+  paymentMethod      String?     @default("CASH")
+  paymentStatus      String?     @default("PENDING") // PENDING, AUTHORIZED, CAPTURED, FAILED
+  paymentIntentId    String?
+  contactPhone       String?
+  deliveryFee        Decimal?    @default(3.00)  // Cargo por entrega calculado en checkout
+
+  // Ratings & Tips
+  shopperRating      Int?
+  driverRating       Int?
+  reviewComment      String?
+  tipAmount          Decimal?    @default(0.00) // Propina asignada en checkout o post-entrega
+
+  customer User  @relation("CustomerOrders", fields: [customerId], references: [id])
+  shopper  User? @relation("ShopperOrders", fields: [shopperId], references: [id])
+  driver   User? @relation("DriverOrders", fields: [driverId], references: [id])
+
+  items    OrderItem[]
+  delivery Delivery?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 4. ÍTEMS DE ORDEN
+model OrderItem {
+  id                 String   @id @default(uuid())
+  orderId            String
+  productId          String
+  quantityRequested  Int
+  quantityFound      Int?
+  status             String   @default("PENDING") // Was Enum ItemStatus
+  replacementProductId String?
+  customerApprovedReplacement Boolean?
+
+  order              Order   @relation(fields: [orderId], references: [id])
+  product            Product @relation(fields: [productId], references: [id])
+  replacementProduct Product? @relation("ReplacementProduct", fields: [replacementProductId], references: [id])
+}
+
+// 5. ENTREGAS
+model Delivery {
+  id           String   @id @default(uuid())
+  orderId      String   @unique
+  driverId     String
+  pickupTime   DateTime?
+  dropoffTime  DateTime?
+  proofOfDeliveryImg String?
+  tipAmount    Decimal?
+  routePolyline String?
+
+  order        Order @relation(fields: [orderId], references: [id])
+  driver       User  @relation(fields: [driverId], references: [id])
+}
+
+// 6. TIENDA (Configuración)
+model Store {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  phone       String
+  email       String
+  logoUrl     String
+  hours       String?
+  
+  updatedAt   DateTime @updatedAt
+}

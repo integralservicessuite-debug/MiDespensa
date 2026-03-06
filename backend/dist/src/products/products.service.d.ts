@@ -1,0 +1,96 @@
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { PrismaService } from '../prisma/prisma.service';
+export declare class ProductsService {
+    private prisma;
+    private readonly BUFFER_QUANTITY;
+    constructor(prisma: PrismaService);
+    create(createProductDto: CreateProductDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        image: string | null;
+        barcode: string | null;
+        description: string | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        stockQuantity: number;
+        aisle: string | null;
+        section: string | null;
+        level: string | null;
+        allowSubstitutions: boolean;
+        categoryId: string | null;
+    }>;
+    findAll(): Promise<{
+        displayedStock: number;
+        category: {
+            id: string;
+            name: string;
+            image: string | null;
+        } | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        image: string | null;
+        barcode: string | null;
+        description: string | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        stockQuantity: number;
+        aisle: string | null;
+        section: string | null;
+        level: string | null;
+        allowSubstitutions: boolean;
+        categoryId: string | null;
+    }[]>;
+    findOne(id: string): Promise<{
+        displayedStock: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        image: string | null;
+        barcode: string | null;
+        description: string | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        stockQuantity: number;
+        aisle: string | null;
+        section: string | null;
+        level: string | null;
+        allowSubstitutions: boolean;
+        categoryId: string | null;
+    } | null>;
+    update(id: string, updateProductDto: UpdateProductDto): import(".prisma/client").Prisma.Prisma__ProductClient<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        image: string | null;
+        barcode: string | null;
+        description: string | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        stockQuantity: number;
+        aisle: string | null;
+        section: string | null;
+        level: string | null;
+        allowSubstitutions: boolean;
+        categoryId: string | null;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    remove(id: string): import(".prisma/client").Prisma.Prisma__ProductClient<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        image: string | null;
+        barcode: string | null;
+        description: string | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        stockQuantity: number;
+        aisle: string | null;
+        section: string | null;
+        level: string | null;
+        allowSubstitutions: boolean;
+        categoryId: string | null;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    private getDisplayedStock;
+}
