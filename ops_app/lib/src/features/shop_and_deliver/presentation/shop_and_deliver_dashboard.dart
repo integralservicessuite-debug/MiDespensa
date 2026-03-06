@@ -37,7 +37,7 @@ class _ShopAndDeliverDashboardState extends ConsumerState<ShopAndDeliverDashboar
   }
 
   void _initSocket() {
-    socket = IO.io('http://localhost:3000', IO.OptionBuilder()
+    socket = IO.io('https://midespensa.onrender.com', IO.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect()
         .build());

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -15,7 +15,6 @@ import '../../../shared/config/app_config.dart';
 import '../data/store_repository.dart';
 import '../../../shared/providers/repository_providers.dart';
 import '../../../shared/services/api_service.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 // Helper class for cart items with quantity
 class CartItem {
@@ -72,12 +71,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _initNotificationsAndSocket() async {
-    const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initializationSettingsIOS = DarwinInitializationSettings(requestAlertPermission: true, requestBadgePermission: true, requestSoundPermission: true);
-    const initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    if (!kIsWeb) {
+      const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initializationSettingsIOS = DarwinInitializationSettings(requestAlertPermission: true, requestBadgePermission: true, requestSoundPermission: true);
+      const initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+      try {
+        await (flutterLocalNotificationsPlugin as dynamic).initialize(initializationSettings);
+      } catch (_) {}
+    }
 
-    socket = IO.io('http://localhost:3000', IO.OptionBuilder()
+    socket = IO.io('https://midespensa.onrender.com', IO.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect()
         .build());
@@ -93,12 +96,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _showNotification(String title, String body) async {
-    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'midespensa_customer', 'Alertas de Consumidor',
-      importance: Importance.max, priority: Priority.high, showWhen: true);
-    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
-    const platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(DateTime.now().millisecond, title, body, platformChannelSpecifics);
+    if (!kIsWeb) {
+      const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'midespensa_customer', 'Alertas de Consumidor',
+        importance: Importance.max, priority: Priority.high, showWhen: true);
+      const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
+      const platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+      try {
+        await (flutterLocalNotificationsPlugin as dynamic).show(DateTime.now().millisecond, title, body, platformChannelSpecifics);
+      } catch (_) {}
+    }
   }
 
   Future<void> _loadStoreInfo() async {
@@ -1607,7 +1614,7 @@ class _OrdersViewState extends State<_OrdersView> {
   }
 
   void _initSocket() {
-    socket = IO.io('http://localhost:3000', IO.OptionBuilder()
+    socket = IO.io('https://midespensa.onrender.com', IO.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect()
         .build());
@@ -2036,7 +2043,7 @@ class _ProfileViewState extends State<_ProfileView> {
                   color: Colors.white,
                   boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.2), blurRadius: 15, spreadRadius: 5)],
                 ),
-                child: const CircleAvatar(radius: 55, backgroundColor: Colors.green, child: Icon(Icons.personOutline, size: 60, color: Colors.white)),
+                child: const CircleAvatar(radius: 55, backgroundColor: Colors.green, child: Icon(Icons.person_outline, size: 60, color: Colors.white)),
               ),
               const SizedBox(height: 24),
               Text('Mi Perfil', style: TextStyle(fontSize: 14, color: Colors.grey.shade600, letterSpacing: 1.5, fontWeight: FontWeight.w500)),

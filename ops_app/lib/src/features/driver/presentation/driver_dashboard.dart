@@ -43,12 +43,16 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> with SingleTi
   }
 
   Future<void> _initNotificationsAndSocket() async {
-    const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initializationSettingsIOS = DarwinInitializationSettings(requestAlertPermission: true, requestBadgePermission: true, requestSoundPermission: true);
-    const initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    if (!kIsWeb) {
+      const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const initializationSettingsIOS = DarwinInitializationSettings(requestAlertPermission: true, requestBadgePermission: true, requestSoundPermission: true);
+      const initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+      try {
+        await (flutterLocalNotificationsPlugin as dynamic).initialize(initializationSettings);
+      } catch (_) {}
+    }
 
-    socket = IO.io('http://localhost:3000', IO.OptionBuilder()
+    socket = IO.io('https://midespensa.onrender.com', IO.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect()
         .build());
@@ -63,12 +67,16 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> with SingleTi
   }
 
   Future<void> _showNotification(String title, String body) async {
-    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'midespensa_driver', 'Alertas de Conductor',
-      importance: Importance.max, priority: Priority.high, showWhen: true);
-    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
-    const platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(DateTime.now().millisecond, title, body, platformChannelSpecifics);
+    if (!kIsWeb) {
+      const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'midespensa_driver', 'Alertas de Conductor',
+        importance: Importance.max, priority: Priority.high, showWhen: true);
+      const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
+      const platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+      try {
+        await (flutterLocalNotificationsPlugin as dynamic).show(DateTime.now().millisecond, title, body, platformChannelSpecifics);
+      } catch (_) {}
+    }
   }
 
   void _startBatchPolling() {

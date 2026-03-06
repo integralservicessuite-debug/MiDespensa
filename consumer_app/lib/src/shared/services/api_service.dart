@@ -1,5 +1,4 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,9 +27,7 @@ class ApiService {
   
   static String _getBaseUrl() {
     const apiPath = '/api/v1';
-    if (kIsWeb) return 'http://localhost:3000$apiPath';
-    if (Platform.isAndroid) return 'http://10.0.2.2:3000$apiPath';
-    return 'http://localhost:3000$apiPath';
+    return 'https://midespensa.onrender.com$apiPath';
   }
   
   static String get baseUrl => _getBaseUrl();
@@ -77,6 +74,15 @@ class ApiService {
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.get(endpoint, queryParameters: queryParameters);
+      return response.data;
+    } on DioException catch (e) {
+      _handleDioError(e);
+    }
+  }
+
+  Future<dynamic> patch(String endpoint, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch(endpoint, data: data);
       return response.data;
     } on DioException catch (e) {
       _handleDioError(e);
