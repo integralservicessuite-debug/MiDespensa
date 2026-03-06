@@ -75,7 +75,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   // Store logo - centered and prominent
                   _storeConfig != null && _storeConfig!['logoUrl'] != null
-                      ? Image.network('${ApiService.baseUrl}${_storeConfig!['logoUrl']}', height: 100)
+                      ? Image.network(
+                          _storeConfig!['logoUrl'].startsWith('http') 
+                            ? _storeConfig!['logoUrl'] 
+                            : '${ApiService.baseUrl}${_storeConfig!['logoUrl']}', 
+                          height: 100)
                       : const Icon(Icons.shopping_basket, size: 80, color: Colors.green),
                   const SizedBox(height: 20),
                   Text(
